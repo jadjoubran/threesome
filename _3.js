@@ -36,13 +36,8 @@
 *********************************************************************************/
 /*
 My Notes:
-1- work on post functionality, unit test get functionality meanwhile
-	1a- all get and other functionalities that were working still are with the changes made
-	1b- post when replyFormat is set to javascript is working
 	1c- post when replyFormat is set to json is NOT working (reasons: wrongfully adding/parsing the JSON)
 	1d- the posted data are not being caught by the recieving server-end
-2- serialize page should only include [source,html,javascript,json,container]
-3- send the serialized Page with post data ( function buildPostDate )
 4- XDR (not yet implemented)
 5- easier ways to call post ?
 6- how to load css dynamically within this structure ? (injector?)
@@ -120,7 +115,7 @@ var _3 = {
 			return this;
 		},
 		serializePage : function (_current){
-			return _3.Helper.IsNullOrEmpty(_current) ? _3.Parser.serializeObject(this) : _3.Parser.serializeObject(_current);
+			return _3.Helper.IsNullOrEmpty(_current) ? _3.Parser.serializeObject({ source : this.source, html : this.html, javascript : this.javascript, json : this.json, container : this.container }) : _3.Parser.serializeObject({ source : _current.source, html : _current.html, javascript : _current.javascript, json : _current.json, container : _current.container });
 		},
 		pop : function (){
 			if(!_3.Helper.IsNullOrEmpty(this.html) && !_3.Helper.IsNullOrEmpty(this.javascript) && !_3.Helper.IsNullOrEmpty(this.json)){
@@ -337,7 +332,7 @@ var _3 = {
 			return _3.Parser.serializeObject({
 				data : data,
 				format : responseFormat
-				//page : _3.Page.serializePage()
+				page : _3.Page.serializePage()
 			});
 		}
 	},

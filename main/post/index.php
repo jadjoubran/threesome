@@ -1,7 +1,5 @@
 <?php
-//echo "{ 'to' : 'Jad' }";
-echo "alert('Hello Jad!');";
-/*
+print_r($_POST)/*
 if($_POST['format']){
 	switch ($_POST['format']) {
 		case 'json':
