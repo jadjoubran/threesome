@@ -36,12 +36,9 @@
 *********************************************************************************/
 /*
 My Notes:
-	1c- post when replyFormat is set to json is NOT working (reasons: wrongfully adding/parsing the JSON)
-	1d- the posted data are not being caught by the recieving server-end
-4- XDR (not yet implemented)
-5- easier ways to call post ?
-6- how to load css dynamically within this structure ? (injector?)
-7- how to load javascript files dynamically ? (injector?)
+1- XDR (not yet implemented)
+2- how to load css dynamically within this structure ? (injector?)
+3- how to load javascript files dynamically ? (injector?)
 
 PS: eventually _3 will be changed into a function_constructor for the object so this will allow multiple
 instances of _3 which means, multiple panels working independently. which my answer some of 6 & 7
