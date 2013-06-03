@@ -1,11 +1,18 @@
 <?php
 $resultsArray = array();
-if($_POST['format'] && $_POST['name']){
-	$resultsArray['to'] = $_POST['name'];
+if($_REQUEST['format'] && $_REQUEST['name']){
+	if($_REQUEST['format'] == 'json'){
+		$resultsArray['to'] = $_REQUEST['name'];
+		echo json_encode($resultsArray);
+	}
+	else if($_REQUEST['format'] == 'javascript'){
+		echo "test";
+	else{
+		echo "error";
+	}
 }
 else{
-	$resultsArray['to'] = 'error';	
+	echo "error";
 }
-echo json_encode($resultsArray);
 die;
 ?>

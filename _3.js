@@ -130,7 +130,6 @@ var _3 = {
 			if(!_3.Helper.IsNullOrEmpty(data)){
 				if(responseFormat == 'json'){
 					callback = function (response){
-						console.log(response);
 						_3.Inject.data(response.responseText);
 					}
 				}
@@ -173,9 +172,10 @@ var _3 = {
 			return eval(page.javascript);
 		},
 		popControls : function (page){
-			var v = new RegExp("id=[\"'][A-Z a-z 0-9 _-]*[\"']",'g');
+			var regX = new RegExp("id=[\"'][A-Z a-z 0-9 _-]*[\"']",'g');
+			page.controls.length = 0;
 			while(1){
-				match = v.exec(page.html);
+				match = regX.exec(page.html);
 				if(match == null){
 					break;
 				} 
@@ -192,7 +192,7 @@ var _3 = {
 				original[k] = data[k];
 			}
 			_3.Page.json = JSON.stringify(original);
-			_3.Parser.bindDataToScreen(_3.Page);
+			_3.Page.pop();
 		},
 		script : function (script){
 			return eval(script);
@@ -299,7 +299,7 @@ var _3 = {
 		printAllErrors : function (printCallback){
 			if(!_3.Helper.IsNullOrEmpty(printCallback)){
 				for (var i = this.errors.length - 1; i >= 0; i--){
-					_3.Helper.execCallback(callback, this.errors[i]);
+					_3.Helper.execCallback(printCallback, this.errors[i]);
 				}
 			}
 			else{
