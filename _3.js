@@ -161,7 +161,7 @@ var _3 = {
 			return _3.Helper.removeLastChar(serializedString);
 		},
 		bindDataToScreen : function (page){
-			var data = this.parseJSON(page.json);
+			var data = JSON.parse(page.json);
 			var template = page.html;
 			this.popControls(page);
 			for(var k in data){
@@ -171,9 +171,6 @@ var _3 = {
 		},
 		bindScript : function (page){
 			return eval(page.javascript);
-		},
-		parseJSON : function (jsonString){
-			return  $.parseJSON(jsonString);
 		},
 		popControls : function (page){
 			var v = new RegExp("id=[\"'][A-Z a-z 0-9 _-]*[\"']",'g');
@@ -189,12 +186,12 @@ var _3 = {
 	},
 	Inject : {
 		data : function (data){
-			var original = _3.Parser.parseJSON(_3.Page.json);
-			data = _3.Parser.parseJSON(data);
+			var original = JSON.parse(_3.Page.json);
+			data = JSON.parse(data);
 			for(var k in data){
-				eval("original." + k + " = data[k]");
+				original[k] = data[k];
 			}
-			_3.Page.json = original;
+			_3.Page.json = JSON.stringify(original);
 			_3.Parser.bindDataToScreen(_3.Page);
 		},
 		script : function (script){
