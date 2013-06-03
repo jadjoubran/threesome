@@ -48,7 +48,7 @@ instances of _3 which means, multiple panels working independently. which my ans
 */
 var _3 = {
 	Page : {
-		source : '', html : '', javascript : '', json : '', container : '',
+		source : '', html : '', javascript : '', json : '', container : '', controls : [],
 		configurePage : function (_source){
 			this.source = _3.Helper.IsNullOrEmpty(_source.source) ? '' : _source.source;
 			this.html = _3.Helper.IsNullOrEmpty(_source.html) ? '' : _source.html;
@@ -130,17 +130,17 @@ var _3 = {
 			if(!_3.Helper.IsNullOrEmpty(data)){
 				if(responseFormat == 'json'){
 					callback = function (response){
+						console.log(response);
 						_3.Inject.data(response.responseText);
 					}
 				}
-
 				if(responseFormat == 'javascript'){
 					callback = function (response){
 						_3.Inject.script(response.responseText);
 					}
 				}
-
-				_3.RequestLoader.post(responseFormat, data, null, null, callback);
+				_3.RequestLoader.post('post', data, null, null, callback);
+				return this;
 			}
 		}
 	},
@@ -154,7 +154,7 @@ var _3 = {
 						serializedString += _3.Parser.serializeObject(current[key]) + '&';
 					}
 					else if(!_3.Helper.IsFunction(key)){
-				    	serializedString += key + '=' + current[key] + '&';
+				    	serializedString += key + '=' + encodeURIComponent(current[key]) + '&';
 				    }
 				}
 			}
@@ -163,6 +163,7 @@ var _3 = {
 		bindDataToScreen : function (page){
 			var data = this.parseJSON(page.json);
 			var template = page.html;
+			this.popControls(page);
 			for(var k in data){
 				template = template.replace(new RegExp('{' + k + '}','g'), data[k]);
 			}
@@ -172,14 +173,26 @@ var _3 = {
 			return eval(page.javascript);
 		},
 		parseJSON : function (jsonString){
-			return eval('(function(){return ' + jsonString + ';})()');
+			return  $.parseJSON(jsonString);
+		},
+		popControls : function (page){
+			var v = new RegExp("id=[\"'][A-Z a-z 0-9 _-]*[\"']",'g');
+			while(1){
+				match = v.exec(page.html);
+				if(match == null){
+					break;
+				} 
+				page.controls.push(match[0].split('=')[1]);
+			}
+			return page;
 		}
 	},
 	Inject : {
 		data : function (data){
 			var original = _3.Parser.parseJSON(_3.Page.json);
+			data = _3.Parser.parseJSON(data);
 			for(var k in data){
-				original[k] = data[k];
+				eval("original." + k + " = data[k]");
 			}
 			_3.Page.json = original;
 			_3.Parser.bindDataToScreen(_3.Page);
@@ -331,9 +344,9 @@ var _3 = {
 		buildPostData : function (data, responseFormat){
 			return _3.Parser.serializeObject({
 				data : data,
-				format : responseFormat
+				format : responseFormat,
 				page : _3.Page.serializePage()
-			});
+			}).replace(new RegExp('%20', 'g'), '+');
 		}
 	},
 	XHR : function (){
@@ -355,6 +368,7 @@ var _3 = {
 				_3.Helper.execCallback(callback, parameters);
 			}
 			this.xhr.open('POST', _url, true);
+			this.xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 			this.xhr.send(postData);
 			return this;
 		};
@@ -371,7 +385,9 @@ var _3 = {
 	Handle : function (requestObject, loadIn, callback){
 		if (requestObject.readyState == 4){
 			if(requestObject.status == 200){
-				_3.Page[loadIn] = requestObject.responseText;
+				if(loadIn != 'post'){
+					_3.Page[loadIn] = requestObject.responseText;
+				}
 				_3.Helper.execCallback(callback, requestObject);
 	    	}
 	    	else{

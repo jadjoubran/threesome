@@ -1,4 +1,9 @@
 <?php
-echo "{ 'from' : '_3', 'action' : 'says', 'greeting' : 'Hello', 'to' : 'World!' }";
+$resultsArray = array();
+$resultsArray['from'] = "_3";
+$resultsArray['action'] = "says";
+$resultsArray['greeting'] = "Hello";
+$resultsArray['to'] = "World";
+echo json_encode($resultsArray);
 die;
 ?>

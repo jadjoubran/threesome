@@ -10,7 +10,8 @@
 			}).load(true, true);
 
 			function post_test(){
-				_3.Page.post({ 'name' : 'Jad' }, 'javascript');
+				var nameValue = _3.Helper.el('name').value;
+				_3.Page.post({ 'name' : nameValue }, 'json');
 			};
 		</script>
 	</head>
