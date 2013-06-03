@@ -1,0 +1,21 @@
+<html>
+	<head>
+		<title>_3 Test</title>
+		<script type="text/javascript" src="_3.js"></script>
+		<script type="text/javascript" src="lib/jquery.js"></script>
+		<script type="text/javascript">
+			_3.Page.configurePage({
+				container : 'main_section',
+				source : '/_3/main'
+			}).load(true, true);
+
+			function post_test(){
+				_3.Page.post({ 'name' : 'Jad' }, 'javascript');
+			};
+		</script>
+	</head>
+	<body>
+		<div id="main_section">
+		</div>
+	</body>
+</html>
