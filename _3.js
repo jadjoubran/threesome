@@ -36,16 +36,17 @@
 *********************************************************************************/
 /*
 My Notes:
-1- XDR (not yet implemented)
-2- how to load css dynamically within this structure ? (injector?)
-3- how to load javascript files dynamically ? (injector?)
+1- how to load css dynamically within this structure ? (injector?)
+2- how to load javascript files dynamically ? (injector?)
 
 PS: eventually _3 will be changed into a function_constructor for the object so this will allow multiple
-instances of _3 which means, multiple panels working independently. which my answer some of 6 & 7
+instances of _3 which means, multiple panels working independently. which my answer some of 1 & 2
+
+updates: added data repo for post responses.
 */
 var _3 = {
 	Page : {
-		source : '', html : '', javascript : '', json : '', container : '', controls : [],
+		source : '', html : '', javascript : '', json : '', container : '', controls : [], dataRepo : '',
 		configurePage : function (_source){
 			this.source = _3.Helper.IsNullOrEmpty(_source.source) ? '' : _source.source;
 			this.html = _3.Helper.IsNullOrEmpty(_source.html) ? '' : _source.html;
@@ -121,13 +122,20 @@ var _3 = {
 			}
 			return this;
 		},
-		post : function (postData, responseFormat){
+		post : function (postData, responseFormat, IsInPostResponseRepo){
 			var data = _3.RequestLoader.buildPostData(postData, responseFormat);
 			var callback = null;
 			if(!_3.Helper.IsNullOrEmpty(data)){
 				if(responseFormat == 'json'){
-					callback = function (response){
-						_3.Inject.data(response.responseText);
+					if(IsInPostResponseRepo){
+						callback = function (response){
+							_3.Inject.pushToRepo(response);
+						}
+					}
+					else{
+						callback = function (response){
+							_3.Inject.data(response.responseText);
+						}
 					}
 				}
 				if(responseFormat == 'javascript'){
@@ -138,6 +146,14 @@ var _3 = {
 				_3.RequestLoader.post('post', data, null, null, callback);
 				return this;
 			}
+		},
+		getDataRepo : function(){
+			return JSON.parse(_3.Helper.el(this.dataRepo).innerText);
+		},
+		addToDataRepo : function (data){
+			var timesign = "data_" + new Date().getTime().toString();
+			_3.Helper.el(this.dataRepo).innerText += timesign + "{" + JSON.stringify(data) + "}";
+			return timesign;
 		}
 	},
 	Parser: {
@@ -182,6 +198,9 @@ var _3 = {
 		}
 	},
 	Inject : {
+		pushToRepo : function (data){
+			_3.Page.addToDataRepo(data);
+		},
 		data : function (data){
 			var original = JSON.parse(_3.Page.json);
 			data = JSON.parse(data);
@@ -370,9 +389,26 @@ var _3 = {
 	},
 	XDR : function (){
 		this.xdr = null;
-		this.get = function (_url, callback, parameters){
+		this.get = function (_url, callback, parameters, loadIn, onHandle){
+			this.xdr = new XDomainRequest();
+			this.xdr.onreadystatechange = function(){
+				_3.Handle(this, loadIn, onHandle);
+				_3.Helper.execCallback(callback, parameters);
+			}
+			this.xdr.open('GET', _url, true);
+			this.xdr.send();
+			return this;
 		};
-		this.post = function (_url, json, callback, parameters){
+		this.post = function (_url, postData, callback, parameters, loadIn, onHandle){
+			this.xdr = new XDomainRequest();
+			this.xdr.onreadystatechange = function(){
+				_3.Handle(this, loadIn, onHandle);
+				_3.Helper.execCallback(callback, parameters);
+			}
+			this.xdr.open('POST', _url, true);
+			this.xdr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			this.xdr.send(postData);
+			return this;
 		};
 		return this;
 	},
@@ -385,7 +421,7 @@ var _3 = {
 				_3.Helper.execCallback(callback, requestObject);
 	    	}
 	    	else{
-				_3.ErrorSilo.addError({errorMessage : 'XML HTTP request failed :: ' + requestObject.statusText, timestamp : new Date().getTime()}, false);
+				_3.ErrorSilo.addError({errorMessage : 'x-HTTP request failed :: ' + requestObject.statusText, timestamp : new Date().getTime()}, false);
 			}
 		}
 	},
