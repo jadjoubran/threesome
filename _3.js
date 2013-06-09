@@ -12,7 +12,7 @@
 	AUTHOR:
 	-------
 	Jad A. Jabbour
-	Pink Floyd, Daft Punk, Tolkein, H. Miller, code & alcohol. Charly passes by a lot; 
+	Pink Floyd, Daft Punk, Tolkein, H. Miller, AC. Doyle, code & alcohol. Charly passes by a lot; 
 	It's alright though. Rainbow writer/Code ninja.  ·  Beirut, Lebanon.
 
 	Blog: medium.com/@JadChronicles
@@ -35,14 +35,14 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
 *********************************************************************************/
 /*
+
 My Notes:
+
 1- how to load css dynamically within this structure ? (injector?)
 2- how to load javascript files dynamically ? (injector?)
+3- eventually _3 will be changed into a function_constructor for the object so this will allow multiple
+instances of _3 which means, multiple panels working independently. which might answer some of 1 & 2
 
-PS: eventually _3 will be changed into a function_constructor for the object so this will allow multiple
-instances of _3 which means, multiple panels working independently. which my answer some of 1 & 2
-
-updates: added data repo for post responses.
 */
 var _3 = {
 	Page : {
@@ -152,7 +152,7 @@ var _3 = {
 		},
 		addToDataRepo : function (data){
 			var timesign = "data_" + new Date().getTime().toString();
-			_3.Helper.el(this.dataRepo).innerText += timesign + "={" + JSON.stringify(data) + "}";
+			_3.Helper.el(this.dataRepo).innerText += "," + timesign + "={" + JSON.stringify(data) + "}";
 			return timesign;
 		}
 	},
