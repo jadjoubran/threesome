@@ -38,10 +38,9 @@
 
 My Notes:
 
-1- how to load css dynamically within this structure ? (injector?)
-2- how to load javascript files dynamically ? (injector?)
-3- eventually _3 will be changed into a function_constructor for the object so this will allow multiple
-instances of _3 which means, multiple panels working independently. which might answer some of 1 & 2
+1- eventually _3 will be changed into a function_constructor for the object so this will allow multiple
+instances of _3 which means, multiple panels working independently.
+2- better error reporting
 
 */
 var _3 = {
@@ -53,6 +52,7 @@ var _3 = {
 			this.javascript = _3.Helper.IsNullOrEmpty(_source.javascript) ? '' : _source.javascript;
 			this.json = _3.Helper.IsNullOrEmpty(_source.json) ? '' : _source.json;
 			this.container = _3.Helper.IsNullOrEmpty(_source.container) ? '' : _source.container;
+			this.dataRepo =  _3.Helper.IsNullOrEmpty(_source.dataRepo) ? '' : _source.dataRepo;
 			return this;
 		}, 
 		loadFront : function (reload_flag, with_pop){
@@ -212,7 +212,22 @@ var _3 = {
 		},
 		script : function (script){
 			return eval(script);
-		}
+		},
+		registerStylesheet : function (cssUrl){
+			var link = document.createElement('link');
+			var head = document.getElementsByTagName("head")[0];
+			link.setAttribute("rel", "stylesheet");
+			link.setAttribute("type", "text/css");
+			link.setAttribute("href", cssUrl);
+			head.appendChild(link);
+		},
+		registerJavascript : function (jsUrl){
+			var script = document.createElement('script');
+			var head = document.getElementsByTagName("head")[0];
+			script.setAttribute("type","text/javascript");
+			script.setAttribute("src", jsUrl);
+			head.appendChild(script);
+		} 
 	},
 	Helper : {
 		el : function (id){
