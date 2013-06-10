@@ -42,6 +42,7 @@ My Notes:
 3- make sure parent object is being parsed in all browsers/platforms.
 4- make sure all dataRepo management is being handled correctly
 5- need EXTENSIVE testing.
+6- after all the above is done, reimplement using prototypes
 
 */
 var _3 = function (_source, loads){
