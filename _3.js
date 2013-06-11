@@ -168,7 +168,7 @@ var _3 = {
 			var element = document.createElement('input');
 			element.type = 'hidden';
 			element.id = this.container + "__" + new Date().getTime().toString();
-			document.getElementsByTagName('body').appendChild(element);
+			document.getElementsByTagName('body')[0].appendChild(element);
 			return element.id;
 		};
 		this.configurePage(_source);
@@ -176,14 +176,13 @@ var _3 = {
 	},
 	Parser : function(){
 		this.helper = new _3.Helper();
-		this.parser = new _3.Parser();
 		this.serializeObject = function (object){
 			var current = !this.helper.IsNullOrEmpty(object) ? object : [];
 			var serializedString = '';
 			for (var key in current){
 				if (current.hasOwnProperty(key)){
 					if(this.helper.IsObject(current[key]) && !this.helper.IsNullOrEmpty(current[key])){
-						serializedString += this.parser.serializeObject(current[key]) + '&';
+						serializedString += this.serializeObject(current[key]) + '&';
 					}
 					else if(!this.helper.IsFunction(key)){
 				    	serializedString += key + '=' + encodeURIComponent(current[key]) + '&';
@@ -516,4 +515,4 @@ var _3 = {
    		};
    		return urlObj;
 	}
-}
+};
