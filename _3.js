@@ -303,7 +303,7 @@ var _3 = {
 					return eval(callback + '(' + paramaterObject + ')');
 				}
 			}
-			_3.ErrorSilo().addError({errorMessage : 'Invalid callback or parameter object.', timestamp : new Date().getTime()}, false);
+			_3.ErrorSilo.addError({errorMessage : 'Invalid callback or parameter object.', timestamp : new Date().getTime()}, false);
 			return null;
 		};
 		return this;
@@ -338,8 +338,8 @@ var _3 = {
 		errorsCount : 0,
 		errors : [],
 		debugMode : false,
-		//helper : new this.Helper(),
-		//notifier : new this.Notifier(),
+		//helper : ,
+		//notifier : ,
 		addError : function (errorObject, notify){
 		//	if(!this.helper.IsNullOrEmpty(errorObject) && this.helper.trimString(errorObject) != ''){
 		//		this.errors.push(errorObject);
@@ -379,7 +379,7 @@ var _3 = {
 			var currUrl = _3.urlObject();
 			var callUrl = _3.urlObject(page.source + '/' + aspect + '/');
 			if(!this.helper.IsNullOrEmpty(currUrl) && !this.helper.IsNullOrEmpty(callUrl)){
-				return callUrl.hostname == currUrl.hostname ? new _3.XHR().get(page, callUrl.fullURL, callback, parameters, aspect, onHandle) : new _3.XDR().get(page, callUrl.fullURL, callback, parameters, aspect, onHandle);
+				return callUrl.host == currUrl.host ? new _3.XHR().get(page, callUrl.fullURL, callback, parameters, aspect, onHandle) : new _3.XDR().get(page, callUrl.fullURL, callback, parameters, aspect, onHandle);
 			}
 			else{
 				_3.ErrorSilo.addError({errorMessage : 'Current URL is not set.', timestamp : new Date().getTime()}, false);
@@ -390,7 +390,7 @@ var _3 = {
 			var currUrl = _3.urlObject();
 			var callUrl = _3.urlObject(page.source + '/post/');
 			if(!this.helper.IsNullOrEmpty(currUrl) && !this.helper.IsNullOrEmpty(callUrl)){
-				return callUrl.hostname == currUrl.hostname ? new _3.XHR().post(page, callUrl.fullURL, postData, callback, parameters, aspect, onHandle) : new _3.XDR().post(page, callUrl.fullURL, postData, callback, parameters, aspect, onHandle);
+				return callUrl.host == currUrl.host ? new _3.XHR().post(page, callUrl.fullURL, postData, callback, parameters, aspect, onHandle) : new _3.XDR().post(page, callUrl.fullURL, postData, callback, parameters, aspect, onHandle);
 			}
 			else{
 				_3.ErrorSilo.addError({errorMessage : 'Current URL is not set.', timestamp : new Date().getTime()}, false);
@@ -411,20 +411,20 @@ var _3 = {
 		this.xhr = null;
 		this.get = function (page, _url, callback, parameters, loadIn, onHandle){
 			this.xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-			this.xhr.onreadystatechange = function(){
+			this.xhr.onreadystatechange = (function(helper){
 				_3.Handle(page, this, loadIn, onHandle);
-				this.helper.execCallback(callback, '');
-			}
+				helper.execCallback(callback, '');
+			})(this.helper);
 			this.xhr.open('GET', _url, true);
 			this.xhr.send();
 			return this;
 		};
 		this.post = function (page, _url, postData, callback, parameters, loadIn, onHandle){
 			this.xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-			this.xhr.onreadystatechange = function(){
+			this.xhr.onreadystatechange = (function(helper){
 				_3.Handle(page, this, loadIn, onHandle);
-				this.helper.execCallback(callback, '');
-			}
+				helper.execCallback(callback, '');
+			})(this.helper);
 			this.xhr.open('POST', _url, true);
 			this.xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 			this.xhr.send(postData);
@@ -437,20 +437,20 @@ var _3 = {
 		this.xdr = null;
 		this.get = function (page, _url, callback, parameters, loadIn, onHandle){
 			this.xdr = new XDomainRequest();
-			this.xdr.onreadystatechange = function(){
+			this.xdr.onreadystatechange = (function(helper){
 				_3.Handle(page, this, loadIn, onHandle);
-				this.helper.execCallback(callback, { 'page' : page, 'withpop' : parameters});
-			}
+				helper.execCallback(callback, { 'page' : page, 'withpop' : parameters});
+			})(this.helper);
 			this.xdr.open('GET', _url, true);
 			this.xdr.send();
 			return this;
 		};
 		this.post = function (page, _url, postData, callback, parameters, loadIn, onHandle){
 			this.xdr = new XDomainRequest();
-			this.xdr.onreadystatechange = function(){
+			this.xdr.onreadystatechange = (function(helper){
 				_3.Handle(page, this, loadIn, onHandle);
-				this.helper.execCallback(callback, { 'page' : page, 'parameters' : parameters});
-			}
+				helper.execCallback(callback, { 'page' : page, 'parameters' : parameters});
+			})(this.helper);
 			this.xdr.open('POST', _url, true);
 			this.xdr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 			this.xdr.send(postData);
