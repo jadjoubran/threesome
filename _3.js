@@ -58,17 +58,17 @@ var _3 = {
 		this.reqHandle = new _3.RequestLoader();
 		this.parser = new _3.Parser();
 		this.injector = new _3.Inject();
-		this.configurePage : function (_source){
+		this.configurePage = function (_source){
 			this.source = this.helper.IsNullOrEmpty(_source.source) ? '' : _source.source;
 			this.container = this.helper.IsNullOrEmpty(_source.container) ? '' : _source.container;
 			this.dataRepo =  this.helper.IsNullOrEmpty(_source.dataRepo) ? this.createDateRepo() : _source.dataRepo;
 			return this;
 		};
-		this.loadFront : function (reload_flag, with_pop){
+		this.loadFront = function (reload_flag, with_pop){
 			if(this.helper.IsNullOrEmpty(this.html) || (this.helper.IsBoolean(reload_flag) && reload_flag)){
-				this.reqHandle.get('html', function (_pop){ 
-					if(_pop){
-						this.pop();//this is wrong
+				this.reqHandle.get(this, 'html', function (_parameters){ 
+					if(_parameters.withpop){
+						_parameters.page.pop();
 					}
 				}, with_pop, null);
 			}
@@ -79,11 +79,11 @@ var _3 = {
 			}
 			return this;
 		};
-		this.loadData : function (reload_flag, with_pop){
+		this.loadData = function (reload_flag, with_pop){
 			if(this.helper.IsNullOrEmpty(this.html) || (this.helper.IsBoolean(reload_flag) && reload_flag)){
-				this.reqHandle.get('json', function (_pop){ 
-					if(_pop){
-						this.pop();//this is wrong
+				this.reqHandle.get(this, 'json', function (_parameters){ 
+					if(_parameters.withpop){
+						_parameters.page.pop();
 					}
 				}, with_pop, null);
 			}
@@ -94,11 +94,11 @@ var _3 = {
 			}
 			return this;
 		};
-		this.loadFunctionality : function (reload_flag, with_pop){
+		this.loadFunctionality = function (reload_flag, with_pop){
 			if(this.helper.IsNullOrEmpty(this.html) || (this.helper.IsBoolean(reload_flag) && reload_flag)){
-				this.reqHandle.get('javascript', function (_pop){ 
-					if(_pop){
-						this.pop();//this is wrong
+				this.reqHandle.get(this, 'javascript', function (_parameters){ 
+					if(_parameters.withpop){
+						_parameters.page.pop();
 					}
 				}, with_pop, null);
 			}
@@ -109,62 +109,62 @@ var _3 = {
 			}
 			return this;
 		};
-		this.load : function (reload_flag, with_pop){
+		this.load = function (reload_flag, with_pop){
 			this.loadFront(reload_flag, with_pop);
 			this.loadData(reload_flag, with_pop);
 			this.loadFunctionality(reload_flag, with_pop);
 			return this;
 		};
-		this.update : function (){
+		this.update = function (){
 			this.loadFront(true, true);
 			this.loadData(true, true);
 			this.loadFunctionality(true, true);
 			return this;
 		};
-		this.serializePage : function (_page){
+		this.serializePage = function (_page){
 			return this.parser.serializeObject({ source : this.source, html : this.html, javascript : this.javascript, json : this.json, container : this.container });
 		};
-		this.pop : function (){
+		this.pop = function (){
 			if(!this.helper.IsNullOrEmpty(this.html) && !this.helper.IsNullOrEmpty(this.javascript) && !this.helper.IsNullOrEmpty(this.json)){
 				this.helper.el(this.container).innerHTML = this.parser.bindDataToScreen(this);
 				this.parser.bindScript(this);	
 			}
 			return this;
 		};
-		this.post : function (postData, responseFormat, IsInPostResponseRepo){
-			var data = this.reqHandle.buildPostData(postData, responseFormat);
+		this.post = function (postData, responseFormat, IsInPostResponseRepo){
+			var data = this.reqHandle.buildPostData(this, postData, responseFormat);
 			var callback = null;
 			if(!this.helper.IsNullOrEmpty(data)){
 				if(responseFormat == 'json'){
 					if(IsInPostResponseRepo){
-						callback = function (response){
-							this.injector.pushToRepo(this, response.responseText);
+						callback = function (_parameters){
+							_parameters.page.injector.pushToRepo(this, _parameters.response.responseText);
 						}
 					}
 					else{
-						callback = function (response){
-							this.injector.data(this, response.responseText);
+						callback = function (_parameters){
+							_parameters.page.injector.data(this, _parameters.response.responseText);
 						}
 					}
 				}
 				if(responseFormat == 'javascript'){
-					callback = function (response){
-						this.injector.script(response.responseText);
+					callback = function (_parameters){
+						_parameters.page.injector.script(_parameters.response.responseText);
 					}
 				}
-				this.reqHandle.post('post', data, null, null, callback);
+				this.reqHandle.post(this, 'post', data, null, null, callback);
 				return this;
 			}
 		};
-		this.getDataRepo : function(){
+		this.getDataRepo = function(){
 			return JSON.parse(this.helper.el(this.dataRepo).innerText);
 		};
-		this.addToDataRepo : function (data){
+		this.addToDataRepo = function (data){
 			var timesign = "data_" + new Date().getTime().toString();
 			this.helper.el(this.dataRepo).innerText += "," + timesign + "={" + JSON.stringify(data) + "}";
 			return timesign;
 		};
-		this.createDateRepo : function (){
+		this.createDateRepo = function (){
 			var element = document.createElement('input');
 			element.type = 'hidden';
 			element.id = this.container + "__" + new Date().getTime().toString();
@@ -177,7 +177,7 @@ var _3 = {
 	Parser : function(){
 		this.helper = new _3.Helper();
 		this.parser = new _3.Parser();
-		this.serializeObject : function (object){
+		this.serializeObject = function (object){
 			var current = !this.helper.IsNullOrEmpty(object) ? object : [];
 			var serializedString = '';
 			for (var key in current){
@@ -192,7 +192,7 @@ var _3 = {
 			}
 			return this.helper.removeLastChar(serializedString);
 		};
-		this.bindDataToScreen : function (page){
+		this.bindDataToScreen = function (page){
 			var data = JSON.parse(page.json);
 			var template = page.html;
 			this.popControls(page);
@@ -201,10 +201,10 @@ var _3 = {
 			}
 			return template;
 		};
-		this.bindScript : function (page){
+		this.bindScript = function (page){
 			return eval(page.javascript);
 		};
-		this.popControls : function (page){
+		this.popControls = function (page){
 			var regX = new RegExp("id=[\"'][A-Z a-z 0-9 _-]*[\"']",'g');
 			page.controls.length = 0;
 			while(1){
@@ -219,10 +219,10 @@ var _3 = {
 		return this;
 	},
 	Inject : function(){
-		this.pushToRepo : function (page, data){
+		this.pushToRepo = function (page, data){
 			page.addToDataRepo(data);
 		};
-		this.data : function (page, data){
+		this.data = function (page, data){
 			var original = JSON.parse(page.json);
 			data = JSON.parse(data);
 			for(var k in data){
@@ -231,10 +231,10 @@ var _3 = {
 			page.json = JSON.stringify(original);
 			page.pop();
 		};
-		this.script : function (script){
+		this.script = function (script){
 			return eval(script);
 		};
-		this.registerStylesheet : function (cssUrl){
+		this.registerStylesheet = function (cssUrl){
 			var link = document.createElement('link');
 			var head = document.getElementsByTagName("head")[0];
 			link.setAttribute("rel", "stylesheet");
@@ -242,7 +242,7 @@ var _3 = {
 			link.setAttribute("href", cssUrl);
 			head.appendChild(link);
 		};
-		this.registerJavascript : function (jsUrl){
+		this.registerJavascript = function (jsUrl){
 			var script = document.createElement('script');
 			var head = document.getElementsByTagName("head")[0];
 			script.setAttribute("type","text/javascript");
@@ -252,11 +252,10 @@ var _3 = {
 		return this;
 	},
 	Helper : function(){
-		this.errors = new _3.ErrorSilo();
-		this.el : function (id){
+		this.el = function (id){
 			return document.getElementById(id);
 		};
-		this.trimString : function (string){
+		this.trimString = function (string){
 			if(this.IsString(string)){
 			    string = string.replace(/^\s+/, '');
 			    for (var i = string.length - 1; i >= 0; i--){
@@ -269,10 +268,10 @@ var _3 = {
 			}
 			return ' ';
 		};
-		this.removeLastChar : function (string){
+		this.removeLastChar = function (string){
 			return string.slice(0, (string.length - 1));
 		};
-		this.IsNullOrEmpty : function (input){
+		this.IsNullOrEmpty = function (input){
 			if (input == null){
 				return true;
 			}
@@ -284,19 +283,19 @@ var _3 = {
 			}
 			return false;
 		};
-		this.IsFunction : function (input){
+		this.IsFunction = function (input){
 			return (typeof input == 'function');
 		};
-		this.IsString : function (input){
+		this.IsString = function (input){
 			return (typeof input == 'string');
 		};
-		this.IsBoolean : function (input){
+		this.IsBoolean = function (input){
 			return (typeof input == 'boolean');
 		};
-		this.IsObject : function (input){
+		this.IsObject = function (input){
 			return (typeof input == 'object');
 		};
-		this.execCallback : function (callback, paramaterObject){
+		this.execCallback = function (callback, paramaterObject){
 			if(!this.IsNullOrEmpty(paramaterObject)){
 				if(this.IsFunction(callback)){
 					return callback(paramaterObject);
@@ -305,14 +304,14 @@ var _3 = {
 					return eval(callback + '(' + paramaterObject + ')');
 				}
 			}
-			this.errors.addError({errorMessage : 'Invalid callback or parameter object.', timestamp : new Date().getTime()}, false);
+			_3.ErrorSilo().addError({errorMessage : 'Invalid callback or parameter object.', timestamp : new Date().getTime()}, false);
 			return null;
 		};
 		return this;
 	},
 	Notifier : function(){
-		this.notifyCallback : '';
-		this.notify : function (mode, message){
+		this.notifyCallback = '';
+		this.notify = function (mode, message){
 			switch(mode){
 				case 'error':
 					this.err(message);
@@ -325,13 +324,13 @@ var _3 = {
 					break;
 			}
 		};
-		this.err : function (message){
+		this.err = function (message){
 			alert('error : ' + message);
 		};
-		this.warn : function (message){
+		this.warn = function (message){
 			alert('warning : ' + message);
 		};
-		this.inform : function (message){
+		this.inform = function (message){
 			alert(message);
 		};
 		return this;
@@ -340,66 +339,66 @@ var _3 = {
 		errorsCount : 0,
 		errors : [],
 		debugMode : false,
-		helper = new _3.Helper(),
-		notifier = new _3.Notifier(),
+		//helper : new this.Helper(),
+		//notifier : new this.Notifier(),
 		addError : function (errorObject, notify){
-			if(!this.helper.IsNullOrEmpty(errorObject) && this.helper.trimString(errorObject) != ''){
-				this.errors.push(errorObject);
-				this.errorsCount++;
-			}
-			if(notify || this.debugMode){
-				this.notifier.notify('error', errorObject.errorMessage);
-			}
+		//	if(!this.helper.IsNullOrEmpty(errorObject) && this.helper.trimString(errorObject) != ''){
+		//		this.errors.push(errorObject);
+		//		this.errorsCount++;
+		//	}
+		//	if(notify || this.debugMode){
+		//		this.notifier.notify('error', errorObject.errorMessage);
+		//	}
 		},
 		clearErrors : function(){
 			this.errors.length = 0;
 			this.errorsCount = 0;
 		},
 		printAllErrors : function (printCallback){
-			if(!this.helper.IsNullOrEmpty(printCallback)){
-				for (var i = this.errors.length - 1; i >= 0; i--){
-					this.helper.execCallback(printCallback, this.errors[i]);
-				}
-			}
-			else{
-				this.addError({errorMessage : 'Supplied print callback function is not valid.', timestamp : new Date().getTime()}, false);
-			}
+		//	if(!this.helper.IsNullOrEmpty(printCallback)){
+		//		for (var i = this.errors.length - 1; i >= 0; i--){
+		//			this.helper.execCallback(printCallback, this.errors[i]);
+		//		}
+		//	}
+		//	else{
+		//		this.addError({errorMessage : 'Supplied print callback function is not valid.', timestamp : new Date().getTime()}, false);
+		//	}
 		},
 		toggleDebug : function (state){
-			if(!this.helper.IsBoolean(state)){
-				this.debugMode = state;
-			}
-			else{
-				this.debugMode = !this.debugMode;
-			}
+		//	if(!this.helper.IsBoolean(state)){
+		//		this.debugMode = state;
+		//	}
+		//	else{
+		//		this.debugMode = !this.debugMode;
+		//	}
 		}
 	},
 	RequestLoader : function(){
 		this.helper = new _3.Helper();
 		this.parser = new _3.Parser();
-		this.get : function (page, aspect, callback, parameters, onHandle){
+		this.get = function (page, aspect, callback, parameters, onHandle){
 			var currUrl = _3.urlObject();
 			var callUrl = _3.urlObject(page.source + '/' + aspect + '/');
 			if(!this.helper.IsNullOrEmpty(currUrl) && !this.helper.IsNullOrEmpty(callUrl)){
-				return callUrl.hostname == currUrl.hostname ? new _3.XHR().get(callUrl.fullURL, callback, parameters, aspect, onHandle) : new _3.XDR().get(callUrl.fullURL, callback, parameters, aspect, onHandle);
+				return callUrl.hostname == currUrl.hostname ? new _3.XHR().get(page, callUrl.fullURL, callback, parameters, aspect, onHandle) : new _3.XDR().get(page, callUrl.fullURL, callback, parameters, aspect, onHandle);
 			}
 			else{
 				_3.ErrorSilo.addError({errorMessage : 'Current URL is not set.', timestamp : new Date().getTime()}, false);
 				return null;
 			}
 		};
-		this.post : function (page, aspect, postData, callback, parameters, onHandle){
+		this.post = function (page, aspect, postData, callback, parameters, onHandle){
 			var currUrl = _3.urlObject();
 			var callUrl = _3.urlObject(page.source + '/post/');
 			if(!this.helper.IsNullOrEmpty(currUrl) && !this.helper.IsNullOrEmpty(callUrl)){
-				return callUrl.hostname == currUrl.hostname ? new _3.XHR().post(callUrl.fullURL, postData, callback, parameters, aspect, onHandle) : new _3.XDR().post(callUrl.fullURL, postData, callback, parameters, aspect, onHandle);
+				return callUrl.hostname == currUrl.hostname ? new _3.XHR().post(page, callUrl.fullURL, postData, callback, parameters, aspect, onHandle) : new _3.XDR().post(page, callUrl.fullURL, postData, callback, parameters, aspect, onHandle);
 			}
 			else{
 				_3.ErrorSilo.addError({errorMessage : 'Current URL is not set.', timestamp : new Date().getTime()}, false);
 				return null;
 			}
 		};
-		this.buildPostData : function (page, data, responseFormat){
+		this.buildPostData = function (page, data, responseFormat){
 			return this.parser.serializeObject({
 				data : data,
 				format : responseFormat,
@@ -415,7 +414,7 @@ var _3 = {
 			this.xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
 			this.xhr.onreadystatechange = function(){
 				_3.Handle(page, this, loadIn, onHandle);
-				this.helper.execCallback(callback, parameters);
+				this.helper.execCallback(callback, '');
 			}
 			this.xhr.open('GET', _url, true);
 			this.xhr.send();
@@ -425,7 +424,7 @@ var _3 = {
 			this.xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
 			this.xhr.onreadystatechange = function(){
 				_3.Handle(page, this, loadIn, onHandle);
-				this.helper.execCallback(callback, parameters);
+				this.helper.execCallback(callback, '');
 			}
 			this.xhr.open('POST', _url, true);
 			this.xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -441,7 +440,7 @@ var _3 = {
 			this.xdr = new XDomainRequest();
 			this.xdr.onreadystatechange = function(){
 				_3.Handle(page, this, loadIn, onHandle);
-				this.helper.execCallback(callback, parameters);
+				this.helper.execCallback(callback, { 'page' : page, 'withpop' : parameters});
 			}
 			this.xdr.open('GET', _url, true);
 			this.xdr.send();
@@ -451,7 +450,7 @@ var _3 = {
 			this.xdr = new XDomainRequest();
 			this.xdr.onreadystatechange = function(){
 				_3.Handle(page, this, loadIn, onHandle);
-				this.helper.execCallback(callback, parameters);
+				this.helper.execCallback(callback, { 'page' : page, 'parameters' : parameters});
 			}
 			this.xdr.open('POST', _url, true);
 			this.xdr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
