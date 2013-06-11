@@ -45,20 +45,30 @@ My Notes:
 6- after all the above is done, reimplement using prototypes
 
 */
-var _3 = function (_source, loads){
-	this.Page = {
-		__3: this.parent, source : '', html : '', javascript : '', json : '', container : '', controls : [], dataRepo : '',
-		configurePage : function (_source){
-			this.source = this.__3.Helper.IsNullOrEmpty(_source.source) ? '' : _source.source;
-			this.container = this.__3.Helper.IsNullOrEmpty(_source.container) ? '' : _source.container;
-			this.dataRepo =  this.__3.Helper.IsNullOrEmpty(_source.dataRepo) ? this.createDateRepo() : _source.dataRepo;
+var _3 = {
+	Page : function(_source){
+		this.source = ''; 
+		this.html = ''; 
+		this.javascript = ''; 
+		this.json = ''; 
+		this.container = ''; 
+		this.controls = []; 
+		this.dataRepo = '';
+		this.helper = new _3.Helper();
+		this.reqHandle = new _3.RequestLoader();
+		this.parser = new _3.Parser();
+		this.injector = new _3.Inject();
+		this.configurePage : function (_source){
+			this.source = this.helper.IsNullOrEmpty(_source.source) ? '' : _source.source;
+			this.container = this.helper.IsNullOrEmpty(_source.container) ? '' : _source.container;
+			this.dataRepo =  this.helper.IsNullOrEmpty(_source.dataRepo) ? this.createDateRepo() : _source.dataRepo;
 			return this;
-		},
-		loadFront : function (reload_flag, with_pop){
-			if(this.__3.Helper.IsNullOrEmpty(this.html) || (this.__3.Helper.IsBoolean(reload_flag) && reload_flag)){
-				this.__3.RequestLoader.get('html', function (_pop){ 
+		};
+		this.loadFront : function (reload_flag, with_pop){
+			if(this.helper.IsNullOrEmpty(this.html) || (this.helper.IsBoolean(reload_flag) && reload_flag)){
+				this.reqHandle.get('html', function (_pop){ 
 					if(_pop){
-						this.__3.Page.pop();
+						this.pop();//this is wrong
 					}
 				}, with_pop, null);
 			}
@@ -68,12 +78,12 @@ var _3 = function (_source, loads){
 				}
 			}
 			return this;
-		},	
-		loadData : function (reload_flag, with_pop){
-			if(this.__3.Helper.IsNullOrEmpty(this.html) || (this.__3.Helper.IsBoolean(reload_flag) && reload_flag)){
-				this.__3.RequestLoader.get('json', function (_pop){ 
+		};
+		this.loadData : function (reload_flag, with_pop){
+			if(this.helper.IsNullOrEmpty(this.html) || (this.helper.IsBoolean(reload_flag) && reload_flag)){
+				this.reqHandle.get('json', function (_pop){ 
 					if(_pop){
-						this.__3.Page.pop();
+						this.pop();//this is wrong
 					}
 				}, with_pop, null);
 			}
@@ -83,12 +93,12 @@ var _3 = function (_source, loads){
 				}
 			}
 			return this;
-		},
-		loadFunctionality : function (reload_flag, with_pop){
-			if(this.__3.Helper.IsNullOrEmpty(this.html) || (this.__3.Helper.IsBoolean(reload_flag) && reload_flag)){
-				this.__3.RequestLoader.get('javascript', function (_pop){ 
+		};
+		this.loadFunctionality : function (reload_flag, with_pop){
+			if(this.helper.IsNullOrEmpty(this.html) || (this.helper.IsBoolean(reload_flag) && reload_flag)){
+				this.reqHandle.get('javascript', function (_pop){ 
 					if(_pop){
-						this.__3.Page.pop();
+						this.pop();//this is wrong
 					}
 				}, with_pop, null);
 			}
@@ -98,151 +108,155 @@ var _3 = function (_source, loads){
 				}
 			}
 			return this;
-		}, 
-		load : function (reload_flag, with_pop){
+		};
+		this.load : function (reload_flag, with_pop){
 			this.loadFront(reload_flag, with_pop);
 			this.loadData(reload_flag, with_pop);
 			this.loadFunctionality(reload_flag, with_pop);
 			return this;
-		}, 
-		update : function (){
+		};
+		this.update : function (){
 			this.loadFront(true, true);
 			this.loadData(true, true);
 			this.loadFunctionality(true, true);
 			return this;
-		},
-		serializePage : function (_page){
-			return this.__3.Parser.serializeObject({ source : this.source, html : this.html, javascript : this.javascript, json : this.json, container : this.container });
-		},
-		pop : function (){
-			if(!this.__3.Helper.IsNullOrEmpty(this.html) && !this.__3.Helper.IsNullOrEmpty(this.javascript) && !this.__3.Helper.IsNullOrEmpty(this.json)){
-				this.__3.Helper.el(this.container).innerHTML = this.__3.Parser.bindDataToScreen(this);
-				this.__3.Parser.bindScript(this);	
+		};
+		this.serializePage : function (_page){
+			return this.parser.serializeObject({ source : this.source, html : this.html, javascript : this.javascript, json : this.json, container : this.container });
+		};
+		this.pop : function (){
+			if(!this.helper.IsNullOrEmpty(this.html) && !this.helper.IsNullOrEmpty(this.javascript) && !this.helper.IsNullOrEmpty(this.json)){
+				this.helper.el(this.container).innerHTML = this.parser.bindDataToScreen(this);
+				this.parser.bindScript(this);	
 			}
 			return this;
-		},
-		post : function (postData, responseFormat, IsInPostResponseRepo){
-			var data = this.__3.RequestLoader.buildPostData(postData, responseFormat);
+		};
+		this.post : function (postData, responseFormat, IsInPostResponseRepo){
+			var data = this.reqHandle.buildPostData(postData, responseFormat);
 			var callback = null;
-			if(!this.__3.Helper.IsNullOrEmpty(data)){
+			if(!this.helper.IsNullOrEmpty(data)){
 				if(responseFormat == 'json'){
 					if(IsInPostResponseRepo){
 						callback = function (response){
-							this.__3.Inject.pushToRepo(response);
+							this.injector.pushToRepo(this, response.responseText);
 						}
 					}
 					else{
 						callback = function (response){
-							this.__3.Inject.data(response.responseText);
+							this.injector.data(this, response.responseText);
 						}
 					}
 				}
 				if(responseFormat == 'javascript'){
 					callback = function (response){
-						this.__3.Inject.script(response.responseText);
+						this.injector.script(response.responseText);
 					}
 				}
-				this.__3.RequestLoader.post('post', data, null, null, callback);
+				this.reqHandle.post('post', data, null, null, callback);
 				return this;
 			}
-		},
-		getDataRepo : function(){
-			return JSON.parse(this.__3.Helper.el(this.dataRepo).innerText);
-		},
-		addToDataRepo : function (data){
+		};
+		this.getDataRepo : function(){
+			return JSON.parse(this.helper.el(this.dataRepo).innerText);
+		};
+		this.addToDataRepo : function (data){
 			var timesign = "data_" + new Date().getTime().toString();
-			this.__3.Helper.el(this.dataRepo).innerText += "," + timesign + "={" + JSON.stringify(data) + "}";
+			this.helper.el(this.dataRepo).innerText += "," + timesign + "={" + JSON.stringify(data) + "}";
 			return timesign;
-		},
-		createDateRepo : function (){
+		};
+		this.createDateRepo : function (){
 			var element = document.createElement('input');
 			element.type = 'hidden';
 			element.id = this.container + "__" + new Date().getTime().toString();
 			document.getElementsByTagName('body').appendChild(element);
 			return element.id;
-		}
-	};
-	this.Parser = {
-		__3: this.parent,
-		serializeObject : function (object){
-			var current = !this.__3.Helper.IsNullOrEmpty(object) ? object : [];
+		};
+		this.configurePage(_source);
+		return this;
+	},
+	Parser : function(){
+		this.helper = new _3.Helper();
+		this.parser = new _3.Parser();
+		this.serializeObject : function (object){
+			var current = !this.helper.IsNullOrEmpty(object) ? object : [];
 			var serializedString = '';
 			for (var key in current){
 				if (current.hasOwnProperty(key)){
-					if(this.__3.Helper.IsObject(current[key]) && !this.__3.Helper.IsNullOrEmpty(current[key])){
-						serializedString += this.__3.Parser.serializeObject(current[key]) + '&';
+					if(this.helper.IsObject(current[key]) && !this.helper.IsNullOrEmpty(current[key])){
+						serializedString += this.parser.serializeObject(current[key]) + '&';
 					}
-					else if(!this.__3.Helper.IsFunction(key)){
+					else if(!this.helper.IsFunction(key)){
 				    	serializedString += key + '=' + encodeURIComponent(current[key]) + '&';
 				    }
 				}
 			}
-			return this.__3.Helper.removeLastChar(serializedString);
-		},
-		bindDataToScreen : function (){
-			var data = JSON.parse(this.__3.Page.json);
-			var template = this.__3.Page.html;
-			this.popControls(this.__3.Page);
+			return this.helper.removeLastChar(serializedString);
+		};
+		this.bindDataToScreen : function (page){
+			var data = JSON.parse(page.json);
+			var template = page.html;
+			this.popControls(page);
 			for(var k in data){
 				template = template.replace(new RegExp('{' + k + '}','g'), data[k]);
 			}
 			return template;
-		},
-		bindScript : function (){
-			return eval(this.__3.Page.javascript);
-		},
-		popControls : function (){
+		};
+		this.bindScript : function (page){
+			return eval(page.javascript);
+		};
+		this.popControls : function (page){
 			var regX = new RegExp("id=[\"'][A-Z a-z 0-9 _-]*[\"']",'g');
-			this.__3.Page.controls.length = 0;
+			page.controls.length = 0;
 			while(1){
-				match = regX.exec(this.__3.Page.html);
+				match = regX.exec(page.html);
 				if(match == null){
 					break;
 				} 
-				this.__3.Page.controls.push(match[0].split('=')[1]);
+				page.controls.push(match[0].split('=')[1]);
 			}
-			return this.__3.Page;
-		}
-	};
-	this.Inject = {
-		__3: this.parent,
-		pushToRepo : function (data){
-			this.__3.Page.addToDataRepo(data);
-		},
-		data : function (data){
-			var original = JSON.parse(this.__3.Page.json);
+			return page;
+		};
+		return this;
+	},
+	Inject : function(){
+		this.pushToRepo : function (page, data){
+			page.addToDataRepo(data);
+		};
+		this.data : function (page, data){
+			var original = JSON.parse(page.json);
 			data = JSON.parse(data);
 			for(var k in data){
 				original[k] = data[k];
 			}
-			this.__3.Page.json = JSON.stringify(original);
-			this.__3.Page.pop();
-		},
-		script : function (script){
+			page.json = JSON.stringify(original);
+			page.pop();
+		};
+		this.script : function (script){
 			return eval(script);
-		},
-		registerStylesheet : function (cssUrl){
+		};
+		this.registerStylesheet : function (cssUrl){
 			var link = document.createElement('link');
 			var head = document.getElementsByTagName("head")[0];
 			link.setAttribute("rel", "stylesheet");
 			link.setAttribute("type", "text/css");
 			link.setAttribute("href", cssUrl);
 			head.appendChild(link);
-		},
-		registerJavascript : function (jsUrl){
+		};
+		this.registerJavascript : function (jsUrl){
 			var script = document.createElement('script');
 			var head = document.getElementsByTagName("head")[0];
 			script.setAttribute("type","text/javascript");
 			script.setAttribute("src", jsUrl);
 			head.appendChild(script);
-		} 
-	};
-	this.Helper = {
-		__3: this.parent,
-		el : function (id){
+		};
+		return this;
+	},
+	Helper : function(){
+		this.errors = new _3.ErrorSilo();
+		this.el : function (id){
 			return document.getElementById(id);
-		},
-		trimString : function (string){
+		};
+		this.trimString : function (string){
 			if(this.IsString(string)){
 			    string = string.replace(/^\s+/, '');
 			    for (var i = string.length - 1; i >= 0; i--){
@@ -254,11 +268,11 @@ var _3 = function (_source, loads){
 			    return string;
 			}
 			return ' ';
-		},
-		removeLastChar : function (string){
+		};
+		this.removeLastChar : function (string){
 			return string.slice(0, (string.length - 1));
-		},
-		IsNullOrEmpty : function (input){
+		};
+		this.IsNullOrEmpty : function (input){
 			if (input == null){
 				return true;
 			}
@@ -269,20 +283,20 @@ var _3 = function (_source, loads){
 				return true;
 			}
 			return false;
-		},
-		IsFunction : function (input){
+		};
+		this.IsFunction : function (input){
 			return (typeof input == 'function');
-		},
-		IsString : function (input){
+		};
+		this.IsString : function (input){
 			return (typeof input == 'string');
-		},
-		IsBoolean : function (input){
+		};
+		this.IsBoolean : function (input){
 			return (typeof input == 'boolean');
-		},
-		IsObject : function (input){
+		};
+		this.IsObject : function (input){
 			return (typeof input == 'object');
-		},
-		execCallback : function (callback, paramaterObject){
+		};
+		this.execCallback : function (callback, paramaterObject){
 			if(!this.IsNullOrEmpty(paramaterObject)){
 				if(this.IsFunction(callback)){
 					return callback(paramaterObject);
@@ -291,14 +305,14 @@ var _3 = function (_source, loads){
 					return eval(callback + '(' + paramaterObject + ')');
 				}
 			}
-			this.__3.ErrorSilo.addError({errorMessage : 'Invalid callback or parameter object.', timestamp : new Date().getTime()}, false);
+			this.errors.addError({errorMessage : 'Invalid callback or parameter object.', timestamp : new Date().getTime()}, false);
 			return null;
-		}
-	};
-	this.Notifier = {
-		__3: this.parent,
-		notifyCallback : '',
-		notify : function (mode, message){
+		};
+		return this;
+	},
+	Notifier : function(){
+		this.notifyCallback : '';
+		this.notify : function (mode, message){
 			switch(mode){
 				case 'error':
 					this.err(message);
@@ -310,29 +324,31 @@ var _3 = function (_source, loads){
 					this.inform(message);
 					break;
 			}
-		},
-		err : function (message){
+		};
+		this.err : function (message){
 			alert('error : ' + message);
-		},
-		warn : function (message){
+		};
+		this.warn : function (message){
 			alert('warning : ' + message);
-		},
-		inform : function (message){
+		};
+		this.inform : function (message){
 			alert(message);
-		}
-	};
-	this.ErrorSilo = {
-		__3: this.parent,
+		};
+		return this;
+	},
+	ErrorSilo : {
 		errorsCount : 0,
 		errors : [],
 		debugMode : false,
+		helper = new _3.Helper(),
+		notifier = new _3.Notifier(),
 		addError : function (errorObject, notify){
-			if(!this.__3.Helper.IsNullOrEmpty(errorObject) && this.__3.Helper.trimString(errorObject) != ''){
+			if(!this.helper.IsNullOrEmpty(errorObject) && this.helper.trimString(errorObject) != ''){
 				this.errors.push(errorObject);
 				this.errorsCount++;
 			}
 			if(notify || this.debugMode){
-				this.__3.Notifier.notify('error', errorObject.errorMessage);
+				this.notifier.notify('error', errorObject.errorMessage);
 			}
 		},
 		clearErrors : function(){
@@ -340,9 +356,9 @@ var _3 = function (_source, loads){
 			this.errorsCount = 0;
 		},
 		printAllErrors : function (printCallback){
-			if(!this.__3.Helper.IsNullOrEmpty(printCallback)){
+			if(!this.helper.IsNullOrEmpty(printCallback)){
 				for (var i = this.errors.length - 1; i >= 0; i--){
-					this.__3.Helper.execCallback(printCallback, this.errors[i]);
+					this.helper.execCallback(printCallback, this.errors[i]);
 				}
 			}
 			else{
@@ -350,64 +366,66 @@ var _3 = function (_source, loads){
 			}
 		},
 		toggleDebug : function (state){
-			if(!this.__3.Helper.IsBoolean(state)){
+			if(!this.helper.IsBoolean(state)){
 				this.debugMode = state;
 			}
 			else{
 				this.debugMode = !this.debugMode;
 			}
 		}
-	};
-	this.RequestLoader = {
-		__3: this.parent,
-		get : function (aspect, callback, parameters, onHandle){
-			var currUrl = this.__3.urlObject();
-			var callUrl = this.__3.urlObject(this.__3.Page.source + '/' + aspect + '/');
-			if(!this.__3.Helper.IsNullOrEmpty(currUrl) && !this.__3.Helper.IsNullOrEmpty(callUrl)){
-				return callUrl.hostname == currUrl.hostname ? new this.__3.XHR().get(callUrl.fullURL, callback, parameters, aspect, onHandle) : new this.__3.XDR().get(callUrl.fullURL, callback, parameters, aspect, onHandle);
+	},
+	RequestLoader : function(){
+		this.helper = new _3.Helper();
+		this.parser = new _3.Parser();
+		this.get : function (page, aspect, callback, parameters, onHandle){
+			var currUrl = _3.urlObject();
+			var callUrl = _3.urlObject(page.source + '/' + aspect + '/');
+			if(!this.helper.IsNullOrEmpty(currUrl) && !this.helper.IsNullOrEmpty(callUrl)){
+				return callUrl.hostname == currUrl.hostname ? new _3.XHR().get(callUrl.fullURL, callback, parameters, aspect, onHandle) : new _3.XDR().get(callUrl.fullURL, callback, parameters, aspect, onHandle);
 			}
 			else{
-				this.__3.ErrorSilo.addError({errorMessage : 'Current URL is not set.', timestamp : new Date().getTime()}, false);
+				_3.ErrorSilo.addError({errorMessage : 'Current URL is not set.', timestamp : new Date().getTime()}, false);
 				return null;
 			}
-		},
-		post : function (aspect, postData, callback, parameters, onHandle){
-			var currUrl = this.__3.urlObject();
-			var callUrl = this.__3.urlObject(this.__3.Page.source + '/post/');
-			if(!this.__3.Helper.IsNullOrEmpty(currUrl) && !this.__3.Helper.IsNullOrEmpty(callUrl)){
-				return callUrl.hostname == currUrl.hostname ? new this.__3.XHR().post(callUrl.fullURL, postData, callback, parameters, aspect, onHandle) : new this.__3.XDR().post(callUrl.fullURL, postData, callback, parameters, aspect, onHandle);
+		};
+		this.post : function (page, aspect, postData, callback, parameters, onHandle){
+			var currUrl = _3.urlObject();
+			var callUrl = _3.urlObject(page.source + '/post/');
+			if(!this.helper.IsNullOrEmpty(currUrl) && !this.helper.IsNullOrEmpty(callUrl)){
+				return callUrl.hostname == currUrl.hostname ? new _3.XHR().post(callUrl.fullURL, postData, callback, parameters, aspect, onHandle) : new _3.XDR().post(callUrl.fullURL, postData, callback, parameters, aspect, onHandle);
 			}
 			else{
-				this.__3.ErrorSilo.addError({errorMessage : 'Current URL is not set.', timestamp : new Date().getTime()}, false);
+				_3.ErrorSilo.addError({errorMessage : 'Current URL is not set.', timestamp : new Date().getTime()}, false);
 				return null;
 			}
-		},
-		buildPostData : function (data, responseFormat){
-			return this.__3.Parser.serializeObject({
+		};
+		this.buildPostData : function (page, data, responseFormat){
+			return this.parser.serializeObject({
 				data : data,
 				format : responseFormat,
-				page : this.__3.Page.serializePage()
+				page : page.serializePage()
 			}).replace(new RegExp('%20', 'g'), '+');
-		}
-	};
-	this.XHR = function (){
-		this.__3 = this.parent;
+		};
+		return this;
+	},
+	XHR : function (){
+		this.helper = new _3.Helper();
 		this.xhr = null;
-		this.get = function (_url, callback, parameters, loadIn, onHandle){
+		this.get = function (page, _url, callback, parameters, loadIn, onHandle){
 			this.xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
 			this.xhr.onreadystatechange = function(){
-				this.__3.Handle(this, loadIn, onHandle);
-				this.__3.Helper.execCallback(callback, parameters);
+				_3.Handle(page, this, loadIn, onHandle);
+				this.helper.execCallback(callback, parameters);
 			}
 			this.xhr.open('GET', _url, true);
 			this.xhr.send();
 			return this;
 		};
-		this.post = function (_url, postData, callback, parameters, loadIn, onHandle){
+		this.post = function (page, _url, postData, callback, parameters, loadIn, onHandle){
 			this.xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
 			this.xhr.onreadystatechange = function(){
-				this.__3.Handle(this, loadIn, onHandle);
-				this.__3.Helper.execCallback(callback, parameters);
+				_3.Handle(page, this, loadIn, onHandle);
+				this.helper.execCallback(callback, parameters);
 			}
 			this.xhr.open('POST', _url, true);
 			this.xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -415,25 +433,25 @@ var _3 = function (_source, loads){
 			return this;
 		};
 		return this;
-	};
-	this.XDR = function (){
-		this.__3 = this.parent;
+	},
+	XDR : function (){
+		this.helper = new _3.Helper();
 		this.xdr = null;
-		this.get = function (_url, callback, parameters, loadIn, onHandle){
+		this.get = function (page, _url, callback, parameters, loadIn, onHandle){
 			this.xdr = new XDomainRequest();
 			this.xdr.onreadystatechange = function(){
-				this.__3.Handle(this, loadIn, onHandle);
-				this.__3.Helper.execCallback(callback, parameters);
+				_3.Handle(page, this, loadIn, onHandle);
+				this.helper.execCallback(callback, parameters);
 			}
 			this.xdr.open('GET', _url, true);
 			this.xdr.send();
 			return this;
 		};
-		this.post = function (_url, postData, callback, parameters, loadIn, onHandle){
+		this.post = function (page, _url, postData, callback, parameters, loadIn, onHandle){
 			this.xdr = new XDomainRequest();
 			this.xdr.onreadystatechange = function(){
-				this.__3.Handle(this, loadIn, onHandle);
-				this.__3.Helper.execCallback(callback, parameters);
+				_3.Handle(page, this, loadIn, onHandle);
+				this.helper.execCallback(callback, parameters);
 			}
 			this.xdr.open('POST', _url, true);
 			this.xdr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -441,26 +459,26 @@ var _3 = function (_source, loads){
 			return this;
 		};
 		return this;
-	};
-	this.Handle = function (requestObject, loadIn, callback){
-		this.__3 = this.parent;
+	},
+	Handle : function (page, requestObject, loadIn, callback){
+		this.helper = new _3.Helper();
 		if (requestObject.readyState == 4){
 			if(requestObject.status == 200){
 				if(loadIn != 'post'){
-					this.__3.Page[loadIn] = requestObject.responseText;
+					page[loadIn] = requestObject.responseText;
 				}
-				this.__3.Helper.execCallback(callback, requestObject);
+				this.helper.execCallback(callback, requestObject);
 	    	}
 	    	else{
-				this.__3.ErrorSilo.addError({errorMessage : 'x-HTTP request failed :: ' + requestObject.statusText, timestamp : new Date().getTime()}, false);
+				_3.ErrorSilo.addError({errorMessage : 'x-HTTP request failed :: ' + requestObject.statusText, timestamp : new Date().getTime()}, false);
 			}
 		}
-	};
-	this.urlObject = function(_url){
-		this.__3 = this.parent;
+	},
+	urlObject : function(_url){
+		this.helper = new _3.Helper();
     	var a,key,value,pair,params,variables;
 		a = document.createElement('a');
-		a.href = this.__3.Helper.IsNullOrEmpty(_url) ? window.location.href : _url;
+		a.href = this.helper.IsNullOrEmpty(_url) ? window.location.href : _url;
 		url_query = a.search.substring(1);
 		params = {};
 		variables = url_query.split('&');
@@ -498,10 +516,5 @@ var _3 = function (_source, loads){
 			parameters:params
    		};
    		return urlObj;
-	};
-
-	this.Page.configurePage(_source);
-
-	if(loads)
-		this.Page.load(true, true);
+	}
 }
