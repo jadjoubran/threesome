@@ -87,7 +87,7 @@ var _3 = {
 			return this;
 		};
 		this.loadData = function (reload_flag, with_pop){
-			if(this.helper.IsNullOrEmpty(this.html) || (this.helper.IsBoolean(reload_flag) && reload_flag)){
+			if(this.helper.IsNullOrEmpty(this.json) || (this.helper.IsBoolean(reload_flag) && reload_flag)){
 				this.reqHandle.get(this, 'json', function (_parameters){ 
 					if(_parameters.withpop){
 						_parameters.page.pop();
@@ -102,7 +102,7 @@ var _3 = {
 			return this;
 		};
 		this.loadFunctionality = function (reload_flag, with_pop){
-			if(this.helper.IsNullOrEmpty(this.html) || (this.helper.IsBoolean(reload_flag) && reload_flag)){
+			if(this.helper.IsNullOrEmpty(this.javascript) || (this.helper.IsBoolean(reload_flag) && reload_flag)){
 				this.reqHandle.get(this, 'javascript', function (_parameters){ 
 					if(_parameters.withpop){
 						_parameters.page.pop();
@@ -117,13 +117,14 @@ var _3 = {
 			return this;
 		};
 		this.load = function (reload_flag, with_pop){
+			this.loadFiles(with_pop);
 			this.loadFront(reload_flag, with_pop);
 			this.loadData(reload_flag, with_pop);
 			this.loadFunctionality(reload_flag, with_pop);
-			this.loadFiles(with_pop);
 			return this;
 		};
 		this.update = function (){
+			this.loadFiles(true);
 			this.loadFront(true, true);
 			this.loadData(true, true);
 			this.loadFunctionality(true, true);
@@ -135,8 +136,8 @@ var _3 = {
 		this.pop = function (){
 			if(!this.helper.IsNullOrEmpty(this.html) && !this.helper.IsNullOrEmpty(this.javascript) && !this.helper.IsNullOrEmpty(this.json)){
 				this.helper.el(this.container).innerHTML = this.parser.bindDataToScreen(this);
-				this.parser.bindScript(this);
 				this.parser.addHeadFiles(this);	
+				this.parser.bindScript(this);
 			}
 			return this;
 		};
@@ -442,20 +443,20 @@ var _3 = {
 		this.xhr = null;
 		this.get = function (page, _url, callback, parameters, loadIn, onHandle){
 			this.xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-			this.xhr.onreadystatechange = (function(helper){
-				_3.Handle(page, this, loadIn, onHandle);
-				helper.execCallback(callback, '');
-			})(this.helper);
+			this.xhr.onreadystatechange = function(){
+				_3.HandleXHR(page, this, loadIn, onHandle);
+				new _3.Helper().execCallback(callback, { 'page' : page, 'withpop' : parameters});
+			};
 			this.xhr.open('GET', _url, true);
 			this.xhr.send();
 			return this;
 		};
 		this.post = function (page, _url, postData, callback, parameters, loadIn, onHandle){
 			this.xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-			this.xhr.onreadystatechange = (function(helper){
-				_3.Handle(page, this, loadIn, onHandle);
-				helper.execCallback(callback, '');
-			})(this.helper);
+			this.xhr.onreadystatechange = function(){
+				_3.HandleXHR(page, this, loadIn, onHandle);
+				new _3.Helper().execCallback(callback, { 'page' : page, 'parameters' : parameters});
+			};
 			this.xhr.open('POST', _url, true);
 			this.xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 			this.xhr.send(postData);
@@ -468,20 +469,20 @@ var _3 = {
 		this.xdr = null;
 		this.get = function (page, _url, callback, parameters, loadIn, onHandle){
 			this.xdr = new XDomainRequest();
-			this.xdr.onreadystatechange = (function(helper){
-				_3.Handle(page, this, loadIn, onHandle);
-				helper.execCallback(callback, { 'page' : page, 'withpop' : parameters});
-			})(this.helper);
+			this.xdr.onreadystatechange = function(){
+				_3.HandleXDR(page, this, loadIn, onHandle);
+				new _3.Helper().execCallback(callback, { 'page' : page, 'withpop' : parameters});
+			};
 			this.xdr.open('GET', _url, true);
 			this.xdr.send();
 			return this;
 		};
 		this.post = function (page, _url, postData, callback, parameters, loadIn, onHandle){
 			this.xdr = new XDomainRequest();
-			this.xdr.onreadystatechange = (function(helper){
-				_3.Handle(page, this, loadIn, onHandle);
-				helper.execCallback(callback, { 'page' : page, 'parameters' : parameters});
-			})(this.helper);
+			this.xdr.onreadystatechange = function(){
+				_3.HandleXDR(page, this, loadIn, onHandle);
+				new _3.Helper().execCallback(callback, { 'page' : page, 'parameters' : parameters});
+			};
 			this.xdr.open('POST', _url, true);
 			this.xdr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 			this.xdr.send(postData);
@@ -489,7 +490,21 @@ var _3 = {
 		};
 		return this;
 	},
-	Handle : function (page, requestObject, loadIn, callback){
+	HandleXHR : function (page, requestObject, loadIn, callback){
+		this.helper = new _3.Helper();
+		if (requestObject.readyState == 4){
+			if(requestObject.status == 200){
+				if(loadIn != 'post'){
+					page[loadIn] = requestObject.responseText;
+				}
+				this.helper.execCallback(callback, requestObject);
+	    	}
+	    	else{
+				_3.ErrorSilo.addError({errorMessage : 'HTTP request failed :: ' + requestObject.statusText, timestamp : new Date().getTime()}, false);
+			}
+		}
+	},
+	HandleXDR : function (page, requestObject, loadIn, callback){
 		this.helper = new _3.Helper();
 		if (requestObject.readyState == 4){
 			if(requestObject.status == 200){
