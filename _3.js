@@ -9,6 +9,9 @@
 
 	I hope someone finds this useful and/or playfull! :)
 
+	Peer review is more than welcome, your thoughts and ideas about this
+	(as harsh as they are) are very important to me.
+	
 	AUTHOR:
 	-------
 	Jad A. Jabbour
@@ -35,12 +38,10 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
 *********************************************************************************/
 /*
-
 My Notes:
 1- make sure all dataRepo management is being handled correctly
 2- need EXTENSIVE testing.
 3- after all the above is done, reimplement using prototypes(?)
-
 */
 var _3 = {
 	Page : function(_source){
