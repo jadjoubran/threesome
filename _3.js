@@ -37,12 +37,9 @@
 /*
 
 My Notes:
-1- Must write functions to GET Js/Css files for PAGE object accordingly.
-2- adjust file structure accordingly (in example) to test new model.
-3- make sure parent object is being parsed in all browsers/platforms.
-4- make sure all dataRepo management is being handled correctly
-5- need EXTENSIVE testing.
-6- after all the above is done, reimplement using prototypes
+1- make sure all dataRepo management is being handled correctly
+2- need EXTENSIVE testing.
+3- after all the above is done, reimplement using prototypes(?)
 
 */
 var _3 = {
@@ -53,6 +50,7 @@ var _3 = {
 		this.json = ''; 
 		this.container = ''; 
 		this.controls = []; 
+		this.files = '';
 		this.dataRepo = '';
 		this.helper = new _3.Helper();
 		this.reqHandle = new _3.RequestLoader();
@@ -62,6 +60,14 @@ var _3 = {
 			this.source = this.helper.IsNullOrEmpty(_source.source) ? '' : _source.source;
 			this.container = this.helper.IsNullOrEmpty(_source.container) ? '' : _source.container;
 			this.dataRepo =  this.helper.IsNullOrEmpty(_source.dataRepo) ? this.createDateRepo() : _source.dataRepo;
+			return this;
+		};
+		this.loadFiles = function (doInject){
+			this.reqHandle.get(this, 'files', function (_parameters){ 
+				if(_parameters.withpop){
+					_parameters.page.pop();
+				}
+			}, doInject, null);
 			return this;
 		};
 		this.loadFront = function (reload_flag, with_pop){
@@ -113,6 +119,7 @@ var _3 = {
 			this.loadFront(reload_flag, with_pop);
 			this.loadData(reload_flag, with_pop);
 			this.loadFunctionality(reload_flag, with_pop);
+			this.loadFiles(with_pop);
 			return this;
 		};
 		this.update = function (){
@@ -127,7 +134,8 @@ var _3 = {
 		this.pop = function (){
 			if(!this.helper.IsNullOrEmpty(this.html) && !this.helper.IsNullOrEmpty(this.javascript) && !this.helper.IsNullOrEmpty(this.json)){
 				this.helper.el(this.container).innerHTML = this.parser.bindDataToScreen(this);
-				this.parser.bindScript(this);	
+				this.parser.bindScript(this);
+				this.parser.addHeadFiles(this);	
 			}
 			return this;
 		};
@@ -167,7 +175,7 @@ var _3 = {
 		this.createDateRepo = function (){
 			var element = document.createElement('input');
 			element.type = 'hidden';
-			element.id = this.container + "__" + new Date().getTime().toString();
+			element.id = this.container + "_dr_" + new Date().getTime().toString();
 			document.getElementsByTagName('body')[0].appendChild(element);
 			return element.id;
 		};
@@ -176,6 +184,7 @@ var _3 = {
 	},
 	Parser : function(){
 		this.helper = new _3.Helper();
+		this.injector = new _3.Inject();
 		this.serializeObject = function (object){
 			var current = !this.helper.IsNullOrEmpty(object) ? object : [];
 			var serializedString = '';
@@ -215,6 +224,25 @@ var _3 = {
 			}
 			return page;
 		};
+		this.addHeadFiles = function(page){
+			if(this.helper.IsNullOrEmpty(page.files)){
+				var files = JSON.parse(page.files);
+				var css = files.css;
+				var javascript = files.javascript;
+
+				for (var i = 0; i < css.length; i++) {
+					this.injector.registerStylesheet(css[i]);
+				};
+				for (var i = 0; i < javascript.length; i++) {
+					this.injector.registerJavascript(javascript[i]);
+				};
+
+				return true;
+			}
+			else{
+				_3.ErrorSilo.addError({errorMessage : 'FILES object is empty.', timestamp : new Date().getTime()}, false);
+			}
+		}
 		return this;
 	},
 	Inject : function(){
@@ -338,38 +366,40 @@ var _3 = {
 		errorsCount : 0,
 		errors : [],
 		debugMode : false,
-		//helper : ,
-		//notifier : ,
 		addError : function (errorObject, notify){
-		//	if(!this.helper.IsNullOrEmpty(errorObject) && this.helper.trimString(errorObject) != ''){
-		//		this.errors.push(errorObject);
-		//		this.errorsCount++;
-		//	}
-		//	if(notify || this.debugMode){
-		//		this.notifier.notify('error', errorObject.errorMessage);
-		//	}
+			helper = new _3.Helper();
+			notifier = new _3.Notifier();
+			if(!helper.IsNullOrEmpty(errorObject) && helper.trimString(errorObject) != ''){
+				this.errors.push(errorObject);
+				this.errorsCount++;
+			}
+			if(notify || this.debugMode){
+				notifier.notify('error', errorObject.errorMessage);
+			}
 		},
 		clearErrors : function(){
 			this.errors.length = 0;
 			this.errorsCount = 0;
 		},
 		printAllErrors : function (printCallback){
-		//	if(!this.helper.IsNullOrEmpty(printCallback)){
-		//		for (var i = this.errors.length - 1; i >= 0; i--){
-		//			this.helper.execCallback(printCallback, this.errors[i]);
-		//		}
-		//	}
-		//	else{
-		//		this.addError({errorMessage : 'Supplied print callback function is not valid.', timestamp : new Date().getTime()}, false);
-		//	}
+			helper = new _3.Helper();
+			if(!helper.IsNullOrEmpty(printCallback)){
+				for (var i = this.errors.length - 1; i >= 0; i--){
+					helper.execCallback(printCallback, this.errors[i]);
+				}
+			}
+			else{
+				this.addError({errorMessage : 'Supplied print callback function is not valid.', timestamp : new Date().getTime()}, false);
+			}
 		},
 		toggleDebug : function (state){
-		//	if(!this.helper.IsBoolean(state)){
-		//		this.debugMode = state;
-		//	}
-		//	else{
-		//		this.debugMode = !this.debugMode;
-		//	}
+			helper = new _3.Helper();
+			if(!helper.IsBoolean(state)){
+				this.debugMode = state;
+			}
+			else{
+				this.debugMode = !this.debugMode;
+			}
 		}
 	},
 	RequestLoader : function(){
