@@ -42,6 +42,9 @@ My Notes:
 1- make sure all dataRepo management is being handled correctly
 2- need EXTENSIVE testing.
 3- after all the above is done, reimplement using prototypes(?)
+
+a- fix debug mode in error silo
+b- includes files not working
 */
 var _3 = {
 	Page : function(_source){
