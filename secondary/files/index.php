@@ -1,3 +1,7 @@
-<?php 
-echo "{ css : 'lib/style.css', javascript : 'lib/jquery.js' }";
+<?php
+$resultsArray = array();
+$resultsArray['css'] = "lib/style.css";
+$resultsArray['javascript'] = "lib/jquery.js";
+echo json_encode($resultsArray);
+die;
 ?>
